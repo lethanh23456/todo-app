@@ -1,0 +1,504 @@
+// Variables
+$primary-color: #2563eb;
+$primary-hover: #1d4ed8;
+$gray-50: #f9fafb;
+$gray-100: #f3f4f6;
+$gray-200: #e5e7eb;
+$gray-300: #d1d5db;
+$gray-400: #9ca3af;
+$gray-500: #6b7280;
+$gray-600: #4b5563;
+$gray-700: #374151;
+$gray-900: #111827;
+$white: #ffffff;
+
+$green-500: #22c55e;
+$red-500: #ef4444;
+$yellow-500: #f59e0b;
+
+$border-radius: 8px;
+$border-radius-lg: 12px;
+$transition: 0.2s ease;
+
+// Mixins
+@mixin flex-center {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+@mixin flex-between {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+@mixin button-base {
+  border: none;
+  cursor: pointer;
+  transition: background-color $transition;
+  border-radius: $border-radius;
+  
+  &:focus {
+    outline: none;
+  }
+}
+
+@mixin input-focus {
+  &:focus {
+    border-color: $primary-color;
+    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+  }
+}
+
+// Main styles
+.app-container {
+  min-height: 100vh;
+  background-color: $gray-50;
+  display: flex;
+}
+
+.sidebar {
+  width: 320px;
+  background: $white;
+  border-right: 1px solid $gray-200;
+  display: flex;
+  flex-direction: column;
+
+  &-header {
+    padding: 16px;
+    border-bottom: 1px solid $gray-200;
+  }
+
+  &-content {
+    flex: 1;
+    overflow-y: auto;
+  }
+}
+
+.header-controls {
+  @include flex-between;
+  margin-bottom: 16px;
+}
+
+.new-task-btn {
+  @include button-base;
+  background: $primary-color;
+  color: $white;
+  padding: 8px 16px;
+  font-weight: 500;
+
+  &:hover {
+    background: $primary-hover;
+  }
+}
+
+.icon-controls {
+  display: flex;
+  gap: 8px;
+}
+
+.icon-btn {
+  @include button-base;
+  @include flex-center;
+  padding: 8px;
+  background: none;
+
+  &:hover {
+    background: $gray-100;
+  }
+}
+
+.search-container {
+  position: relative;
+
+  .search-icon {
+    position: absolute;
+    left: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: $gray-400;
+  }
+
+  .search-input {
+    width: 100%;
+    padding: 8px 12px 8px 40px;
+    border: 1px solid $gray-300;
+    border-radius: $border-radius;
+    outline: none;
+    transition: border-color $transition, box-shadow $transition;
+
+    @include input-focus;
+  }
+}
+
+.section-title {
+  font-size: 12px;
+  font-weight: 500;
+  color: $gray-500;
+  margin-bottom: 12px;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+.category-section {
+  padding: 16px;
+
+  .category-list {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  .category-item {
+    @include button-base;
+    @include flex-between;
+    width: 100%;
+    padding: 12px;
+    background: none;
+    text-align: left;
+    color: $gray-700;
+
+    &:hover {
+      background: $gray-50;
+    }
+
+    &.active {
+      background: #eff6ff;
+      color: $primary-color;
+      border-left: 4px solid $primary-color;
+
+      .category-count {
+        background: #dbeafe;
+        color: $primary-color;
+      }
+    }
+
+    .category-name {
+      font-weight: 500;
+    }
+
+    .category-count {
+      font-size: 12px;
+      padding: 4px 8px;
+      border-radius: 12px;
+      background: $gray-100;
+      color: $gray-500;
+      min-width: 20px;
+      text-align: center;
+    }
+  }
+}
+
+.project-section {
+  padding: 16px;
+  border-top: 1px solid $gray-100;
+
+  .project-list {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  .project-item {
+    @include button-base;
+    width: 100%;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 8px;
+    background: none;
+    text-align: left;
+
+    &:hover {
+      background: $gray-50;
+    }
+
+    .project-indicator {
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+    }
+
+    .project-name {
+      color: $gray-700;
+      font-weight: 400;
+    }
+  }
+}
+
+.main-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.main-header {
+  background: $white;
+  border-bottom: 1px solid $gray-200;
+  padding: 16px 24px;
+
+  &-content {
+    @include flex-between;
+  }
+
+  .main-title-section {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+
+    .main-title {
+      font-size: 24px;
+      font-weight: 600;
+      color: $gray-900;
+    }
+
+    .task-count {
+      font-size: 14px;
+      color: $gray-500;
+    }
+  }
+
+  .main-controls {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+
+    .today-btn {
+      @include button-base;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 12px;
+      color: $gray-500;
+      background: none;
+
+      &:hover {
+        background: $gray-100;
+      }
+    }
+
+    .user-info {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+
+      .user-text {
+        font-size: 14px;
+        color: $gray-500;
+      }
+    }
+  }
+}
+
+.main-body {
+  flex: 1;
+  padding: 24px;
+  overflow-y: auto;
+
+  .main-container {
+    max-width: 1024px;
+    margin: 0 auto;
+  }
+}
+
+.content-section {
+  margin-bottom: 24px;
+}
+
+.add-task-section {
+  background: $white;
+  border-radius: $border-radius-lg;
+  border: 2px dashed $gray-300;
+  padding: 24px;
+  text-align: center;
+  transition: border-color $transition;
+
+  &:hover {
+    border-color: $primary-color;
+  }
+
+  .add-task-trigger {
+    @include button-base;
+    @include flex-center;
+    gap: 8px;
+    color: $gray-500;
+    background: none;
+    margin-bottom: 16px;
+
+    &:hover {
+      color: $primary-color;
+    }
+  }
+
+  .new-task-input {
+    width: 100%;
+    padding: 12px;
+    border: 1px solid $gray-300;
+    border-radius: $border-radius;
+    outline: none;
+    transition: border-color $transition, box-shadow $transition;
+
+    @include input-focus;
+  }
+}
+
+.task-card {
+  background: $white;
+  border-radius: $border-radius-lg;
+  border: 1px solid $gray-200;
+  padding: 24px;
+  margin-bottom: 16px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  transition: box-shadow $transition;
+
+  &:hover {
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+  }
+
+  &.completed-task-card {
+    background: $gray-50;
+    opacity: 0.75;
+  }
+
+  .task-content {
+    display: flex;
+    align-items: flex-start;
+    gap: 16px;
+
+    .task-checkbox {
+      @include button-base;
+      @include flex-center;
+      width: 20px;
+      height: 20px;
+      border: 2px solid $gray-300;
+      border-radius: 4px;
+      background: none;
+      margin-top: 4px;
+      transition: border-color $transition, background-color $transition;
+
+      &:hover {
+        border-color: $primary-color;
+      }
+
+      &.completed {
+        background: $green-500;
+        border-color: $green-500;
+
+        .check-icon {
+          width: 12px;
+          height: 12px;
+          color: $white;
+        }
+      }
+    }
+
+    .task-details {
+      flex: 1;
+
+      .task-header {
+        @include flex-between;
+        margin-bottom: 8px;
+
+        .task-title {
+          font-size: 18px;
+          font-weight: 500;
+          color: $gray-900;
+
+          &.completed {
+            text-decoration: line-through;
+            color: $gray-500;
+          }
+        }
+
+        .task-remove {
+          @include button-base;
+          padding: 4px;
+          background: none;
+
+          &:hover {
+            background: $gray-100;
+          }
+        }
+      }
+
+      .task-meta {
+        display: flex;
+        align-items: center;
+        gap: 16px;
+
+        .task-date {
+          display: flex;
+          align-items: center;
+          gap: 4px;
+          font-size: 14px;
+          color: $gray-500;
+        }
+
+        .task-priority {
+          font-size: 12px;
+          padding: 4px 8px;
+          border-radius: 12px;
+          color: $white;
+          font-weight: 500;
+        }
+      }
+    }
+  }
+}
+
+.completed-section {
+  margin-top: 32px;
+
+  .section-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 16px;
+    font-size: 18px;
+    font-weight: 500;
+    color: $gray-500;
+  }
+}
+
+.empty-state {
+  text-align: center;
+  padding: 48px 0;
+
+  .empty-icon {
+    @include flex-center;
+    width: 64px;
+    height: 64px;
+    background: $gray-100;
+    border-radius: $border-radius-lg;
+    margin: 0 auto 16px;
+  }
+
+  .empty-title {
+    font-size: 18px;
+    font-weight: 500;
+    color: $gray-900;
+    margin-bottom: 8px;
+  }
+
+  .empty-description {
+    color: $gray-500;
+    margin-bottom: 16px;
+  }
+}
+
+.primary-btn {
+  @include button-base;
+  background: $primary-color;
+  color: $white;
+  padding: 8px 16px;
+  font-weight: 500;
+
+  &:hover {
+    background: $primary-hover;
+  }
+}
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
