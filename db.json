@@ -1,0 +1,57 @@
+{
+  "tasks": [
+    {
+      "id": "cc49",
+      "text": "ưefwfw",
+      "completed": false,
+      "priority": "Trung bình",
+      "date": "2025-09-13",
+      "category": "work",
+      "createdAt": "2025-09-13T17:08:40.002Z",
+      "updatedAt": "2025-09-13T17:08:40.002Z"
+    }
+  ],
+  "categories": [
+    {
+      "id": "1",
+      "name": "Tất cả tasks",
+      "count": 3,
+      "active": true
+    },
+    {
+      "id": "2",
+      "name": "Hôm nay",
+      "count": 1,
+      "active": false
+    },
+    {
+      "id": "3",
+      "name": "Sắp tới",
+      "count": 2,
+      "active": false
+    },
+    {
+      "id": "4",
+      "name": "Đã hoàn thành",
+      "count": 1,
+      "active": false
+    }
+  ],
+  "projects": [
+    {
+      "id": "1",
+      "name": "Dự án Website",
+      "color": "#ef4444"
+    },
+    {
+      "id": "2",
+      "name": "App Mobile",
+      "color": "#22c55e"
+    },
+    {
+      "id": "3",
+      "name": "Marketing",
+      "color": "#3b82f6"
+    }
+  ]
+}

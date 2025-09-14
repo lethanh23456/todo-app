@@ -1,105 +1,131 @@
 import React, { Component } from 'react';
-import { Search, Plus, Filter, Calendar, MoreHorizontal, User, Star, X } from 'lucide-react';
+import { Search, Plus, Filter, Calendar, MoreHorizontal, User, Star, X, Loader2 } from 'lucide-react';
+import { taskService } from './taskService';
+import type { Task, Category, Project } from './taskService';
 import './App.scss';
-
-interface Task {
-  id: number;
-  text: string;
-  completed: boolean;
-  priority: string;
-  date: string;
-  category: string;
-}
-
-interface Category {
-  name: string;
-  count: number;
-  active?: boolean;
-}
-
-interface Project {
-  name: string;
-  color: string;
-}
 
 interface AppState {
   tasks: Task[];
+  categories: Category[];
+  projects: Project[];
   newTask: string;
   selectedCategory: string;
+  loading: boolean;
+  error: string | null;
+  searchQuery: string;
 }
 
 class App extends Component<{}, AppState> {
   constructor(props: {}) {
     super(props);
     this.state = {
-      tasks: [
-        {
-          id: 1,
-          text: "Hoàn thành báo cáo dự án",
-          completed: false,
-          priority: "Cao",
-          date: "2025-09-13",
-          category: "work"
-        },
-        {
-          id: 2,
-          text: "Họp team buổi sáng",
-          completed: true,
-          priority: "Trung bình",
-          date: "2025-09-12",
-          category: "meeting"
-        },
-        {
-          id: 3,
-          text: "Review code của đồng nghiệp",
-          completed: false,
-          priority: "Thấp",
-          date: "2025-09-14",
-          category: "review"
-        }
-      ],
+      tasks: [],
+      categories: [],
+      projects: [],
       newTask: "",
-      selectedCategory: "Tất cả tasks"
+      selectedCategory: "Tất cả tasks",
+      loading: true,
+      error: null,
+      searchQuery: ""
     };
   }
 
-  categories: Category[] = [
-    { name: "Tất cả tasks", count: 3, active: true },
-    { name: "Hôm nay", count: 1 },
-    { name: "Sắp tới", count: 2 },
-    { name: "Đã hoàn thành", count: 1 }
-  ];
+  async componentDidMount() {
+    await this.loadData();
+  }
 
-  projects: Project[] = [
-    { name: "Dự án Website", color: "#ef4444" },
-    { name: "App Mobile", color: "#22c55e" },
-    { name: "Marketing", color: "#3b82f6" }
-  ];
+  loadData = async (): Promise<void> => {
+    this.setState({ loading: true, error: null });
+    
+    try {
+      const [tasks, categories, projects] = await Promise.all([
+        taskService.getAllTasks(),
+        taskService.getAllCategories(),
+        taskService.getAllProjects()
+      ]);
 
-  toggleTask = (id: number): void => {
-    this.setState(prevState => ({
-      tasks: prevState.tasks.map(task => 
-        task.id === id ? { ...task, completed: !task.completed } : task
-      )
-    }));
+      this.setState({
+        tasks,
+        categories,
+        projects,
+        loading: false
+      });
+    } catch (error) {
+      console.error('Error loading data:', error);
+      this.setState({
+        error: 'Không thể tải dữ liệu. Vui lòng kiểm tra JSON Server đã chạy chưa.',
+        loading: false
+      });
+    }
   };
 
-  addTask = (): void => {
-    const { newTask, tasks } = this.state;
-    if (newTask.trim()) {
-      const newTaskObj: Task = {
-        id: Date.now(),
+  toggleTask = async (id: number): Promise<void> => {
+    try {
+      const updatedTask = await taskService.toggleTask(id);
+      
+      this.setState(prevState => ({
+        tasks: prevState.tasks.map(task => 
+          task.id === id ? updatedTask : task
+        )
+      }));
+    } catch (error) {
+      console.error('Error toggling task:', error);
+      this.setState({ error: 'Không thể cập nhật task' });
+    }
+  };
+
+  addTask = async (): Promise<void> => {
+    const { newTask } = this.state;
+    if (!newTask.trim()) return;
+
+    try {
+      const newTaskObj = {
         text: newTask,
         completed: false,
         priority: "Trung bình",
         date: new Date().toISOString().split('T')[0],
         category: "work"
       };
+
+      const createdTask = await taskService.createTask(newTaskObj);
       
-      this.setState({
-        tasks: [...tasks, newTaskObj],
+      this.setState(prevState => ({
+        tasks: [...prevState.tasks, createdTask],
         newTask: ""
-      });
+      }));
+    } catch (error) {
+      console.error('Error adding task:', error);
+      this.setState({ error: 'Không thể thêm task mới' });
+    }
+  };
+
+  deleteTask = async (id: number): Promise<void> => {
+    if (!window.confirm('Bạn có chắc chắn muốn xóa task này?')) return;
+
+    try {
+      await taskService.deleteTask(id);
+      
+      this.setState(prevState => ({
+        tasks: prevState.tasks.filter(task => task.id !== id)
+      }));
+    } catch (error) {
+      console.error('Error deleting task:', error);
+      this.setState({ error: 'Không thể xóa task' });
+    }
+  };
+
+  updateTask = async (id: number, updates: Partial<Task>): Promise<void> => {
+    try {
+      const updatedTask = await taskService.updateTask(id, updates);
+      
+      this.setState(prevState => ({
+        tasks: prevState.tasks.map(task => 
+          task.id === id ? updatedTask : task
+        )
+      }));
+    } catch (error) {
+      console.error('Error updating task:', error);
+      this.setState({ error: 'Không thể cập nhật task' });
     }
   };
 
@@ -111,6 +137,10 @@ class App extends Component<{}, AppState> {
     if (e.key === 'Enter') {
       this.addTask();
     }
+  };
+
+  handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>): void => {
+    this.setState({ searchQuery: e.target.value });
   };
 
   setSelectedCategory = (categoryName: string): void => {
@@ -131,13 +161,71 @@ class App extends Component<{}, AppState> {
     if (input) input.focus();
   };
 
+  getFilteredTasks = (): { activeTasks: Task[], completedTasks: Task[] } => {
+    const { tasks, selectedCategory, searchQuery } = this.state;
+    
+    let filteredTasks = tasks;
+
+    // Lọc theo search query
+    if (searchQuery.trim()) {
+      filteredTasks = filteredTasks.filter(task =>
+        task.text.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        task.category.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        task.priority.toLowerCase().includes(searchQuery.toLowerCase())
+      );
+    }
+
+    // Lọc theo category
+    if (selectedCategory !== "Tất cả tasks") {
+      const today = new Date().toISOString().split('T')[0];
+      
+      switch (selectedCategory) {
+        case "Hôm nay":
+          filteredTasks = filteredTasks.filter(task => task.date === today);
+          break;
+        case "Sắp tới":
+          filteredTasks = filteredTasks.filter(task => task.date > today);
+          break;
+        case "Đã hoàn thành":
+          filteredTasks = filteredTasks.filter(task => task.completed);
+          break;
+      }
+    }
+
+    return {
+      activeTasks: filteredTasks.filter(task => !task.completed),
+      completedTasks: filteredTasks.filter(task => task.completed)
+    };
+  };
+
+  dismissError = (): void => {
+    this.setState({ error: null });
+  };
+
   render() {
-    const { tasks, newTask, selectedCategory } = this.state;
-    const activeTasks = tasks.filter(task => !task.completed);
-    const completedTasks = tasks.filter(task => task.completed);
+    const { newTask, selectedCategory, loading, error, searchQuery, categories, projects } = this.state;
+    const { activeTasks, completedTasks } = this.getFilteredTasks();
+
+    if (loading) {
+      return (
+        <div className="loading-container">
+          <Loader2 className="loading-spinner" size={32} />
+          <p>Đang tải dữ liệu...</p>
+        </div>
+      );
+    }
 
     return (
       <>
+        {/* Error Toast */}
+        {error && (
+          <div className="error-toast">
+            <span>{error}</span>
+            <button onClick={this.dismissError} className="error-close">
+              <X size={16} />
+            </button>
+          </div>
+        )}
         
         <div className="app-container">
           {/* Sidebar */}
@@ -148,6 +236,7 @@ class App extends Component<{}, AppState> {
                 <button 
                   onClick={this.addTask}
                   className="new-task-btn"
+                  disabled={!newTask.trim()}
                 >
                   New Task
                 </button>
@@ -167,6 +256,8 @@ class App extends Component<{}, AppState> {
                   type="text"
                   placeholder="Tìm kiếm tasks..."
                   className="search-input"
+                  value={searchQuery}
+                  onChange={this.handleSearchChange}
                 />
               </div>
             </div>
@@ -177,9 +268,9 @@ class App extends Component<{}, AppState> {
               <div className="category-section">
                 <div className="section-title">DANH MỤC</div>
                 <div className="category-list">
-                  {this.categories.map((category, index) => (
+                  {categories.map((category) => (
                     <button
-                      key={index}
+                      key={category.id}
                       onClick={() => this.setSelectedCategory(category.name)}
                       className={`category-item ${selectedCategory === category.name ? 'active' : ''}`}
                     >
@@ -194,8 +285,8 @@ class App extends Component<{}, AppState> {
               <div className="project-section">
                 <div className="section-title">DỰ ÁN</div>
                 <div className="project-list">
-                  {this.projects.map((project, index) => (
-                    <button key={index} className="project-item">
+                  {projects.map((project) => (
+                    <button key={project.id} className="project-item">
                       <div 
                         className="project-indicator"
                         style={{ backgroundColor: project.color }}
@@ -272,14 +363,17 @@ class App extends Component<{}, AppState> {
                         <div className="task-details">
                           <div className="task-header">
                             <h3 className="task-title">{task.text}</h3>
-                            <button className="task-remove">
+                            <button 
+                              className="task-remove"
+                              onClick={() => this.deleteTask(task.id)}
+                            >
                               <X size={16} />
                             </button>
                           </div>
                           <div className="task-meta">
                             <span className="task-date">
                               <Calendar size={14} />
-                              {task.date}
+                              {new Date(task.date).toLocaleDateString('vi-VN')}
                             </span>
                             <span 
                               className="task-priority"
@@ -316,14 +410,17 @@ class App extends Component<{}, AppState> {
                             <div className="task-details">
                               <div className="task-header">
                                 <h3 className="task-title completed">{task.text}</h3>
-                                <button className="task-remove">
+                                <button 
+                                  className="task-remove"
+                                  onClick={() => this.deleteTask(task.id)}
+                                >
                                   <X size={16} />
                                 </button>
                               </div>
                               <div className="task-meta">
                                 <span className="task-date">
                                   <Calendar size={14} />
-                                  {task.date}
+                                  {new Date(task.date).toLocaleDateString('vi-VN')}
                                 </span>
                                 <span className="task-priority" style={{ backgroundColor: '#e5e7eb', color: '#6b7280' }}>
                                   {task.priority}
@@ -338,7 +435,7 @@ class App extends Component<{}, AppState> {
                 )}
 
                 {/* Empty State */}
-                {activeTasks.length === 0 && (
+                {activeTasks.length === 0 && !searchQuery && (
                   <div className="empty-state">
                     <div className="empty-icon">
                       <Plus size={32} />
@@ -351,6 +448,17 @@ class App extends Component<{}, AppState> {
                     >
                       Thêm task đầu tiên
                     </button>
+                  </div>
+                )}
+
+                {/* No Search Results */}
+                {activeTasks.length === 0 && searchQuery && (
+                  <div className="empty-state">
+                    <div className="empty-icon">
+                      <Search size={32} />
+                    </div>
+                    <h3 className="empty-title">Không tìm thấy kết quả</h3>
+                    <p className="empty-description">Không có task nào khớp với từ khóa "{searchQuery}"</p>
                   </div>
                 )}
               </div>
