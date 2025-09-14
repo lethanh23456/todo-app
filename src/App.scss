@@ -51,6 +51,55 @@ $transition: 0.2s ease;
   }
 }
 
+// Loading state
+.loading-container {
+  @include flex-center;
+  min-height: 100vh;
+  flex-direction: column;
+  gap: 16px;
+  color: $gray-600;
+
+  .loading-spinner {
+    animation: spin 1s linear infinite;
+  }
+}
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+// Error toast
+.error-toast {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  background: $red-500;
+  color: $white;
+  padding: 12px 16px;
+  border-radius: $border-radius;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  z-index: 1000;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+
+  .error-close {
+    @include button-base;
+    background: none;
+    color: $white;
+    padding: 4px;
+
+    &:hover {
+      background: rgba(255, 255, 255, 0.1);
+    }
+  }
+}
+
 // Main styles
 .app-container {
   min-height: 100vh;
@@ -65,47 +114,10 @@ $transition: 0.2s ease;
   display: flex;
   flex-direction: column;
 
-  &-header {
-    padding: 16px;
-    border-bottom: 1px solid $gray-200;
-  }
 
   &-content {
     flex: 1;
     overflow-y: auto;
-  }
-}
-
-.header-controls {
-  @include flex-between;
-  margin-bottom: 16px;
-}
-
-.new-task-btn {
-  @include button-base;
-  background: $primary-color;
-  color: $white;
-  padding: 8px 16px;
-  font-weight: 500;
-
-  &:hover {
-    background: $primary-hover;
-  }
-}
-
-.icon-controls {
-  display: flex;
-  gap: 8px;
-}
-
-.icon-btn {
-  @include button-base;
-  @include flex-center;
-  padding: 8px;
-  background: none;
-
-  &:hover {
-    background: $gray-100;
   }
 }
 
@@ -121,7 +133,7 @@ $transition: 0.2s ease;
   }
 
   .search-input {
-    width: 100%;
+    width: 220px;
     padding: 8px 12px 8px 40px;
     border: 1px solid $gray-300;
     border-radius: $border-radius;
@@ -190,53 +202,19 @@ $transition: 0.2s ease;
   }
 }
 
-.project-section {
-  padding: 16px;
-  border-top: 1px solid $gray-100;
-
-  .project-list {
-    display: flex;
-    flex-direction: column;
-    gap: 4px;
-  }
-
-  .project-item {
-    @include button-base;
-    width: 100%;
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    padding: 8px;
-    background: none;
-    text-align: left;
-
-    &:hover {
-      background: $gray-50;
-    }
-
-    .project-indicator {
-      width: 12px;
-      height: 12px;
-      border-radius: 50%;
-    }
-
-    .project-name {
-      color: $gray-700;
-      font-weight: 400;
-    }
-  }
-}
-
 .main-content {
   flex: 1;
   display: flex;
   flex-direction: column;
 }
+.sidebar-header {
+  padding: 30px;
+}
 
 .main-header {
   background: $white;
   border-bottom: 1px solid $gray-200;
-  padding: 16px 24px;
+  padding: 17px 24px;
 
   &-content {
     @include flex-between;
@@ -256,37 +234,6 @@ $transition: 0.2s ease;
     .task-count {
       font-size: 14px;
       color: $gray-500;
-    }
-  }
-
-  .main-controls {
-    display: flex;
-    align-items: center;
-    gap: 16px;
-
-    .today-btn {
-      @include button-base;
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      padding: 8px 12px;
-      color: $gray-500;
-      background: none;
-
-      &:hover {
-        background: $gray-100;
-      }
-    }
-
-    .user-info {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-
-      .user-text {
-        font-size: 14px;
-        color: $gray-500;
-      }
     }
   }
 }
@@ -319,20 +266,18 @@ $transition: 0.2s ease;
   }
 
   .add-task-trigger {
-    @include button-base;
     @include flex-center;
     gap: 8px;
     color: $gray-500;
     background: none;
+    border: none;
     margin-bottom: 16px;
-
-    &:hover {
-      color: $primary-color;
-    }
+    font-size: 16px;
   }
 
   .new-task-input {
     width: 100%;
+    max-width: 900px;
     padding: 12px;
     border: 1px solid $gray-300;
     border-radius: $border-radius;
@@ -486,19 +431,3 @@ $transition: 0.2s ease;
     margin-bottom: 16px;
   }
 }
-
-.primary-btn {
-  @include button-base;
-  background: $primary-color;
-  color: $white;
-  padding: 8px 16px;
-  font-weight: 500;
-
-  &:hover {
-    background: $primary-hover;
-  }
-}
-
-@tailwind base;
-@tailwind components;
-@tailwind utilities;

@@ -1,13 +1,12 @@
 import React, { Component } from 'react';
-import { Search, Plus, Filter, Calendar, MoreHorizontal, User, Star, X, Loader2 } from 'lucide-react';
+import { Search, Plus, Calendar, X, Loader2 } from 'lucide-react';
 import { taskService } from './taskService';
-import type { Task, Category, Project } from './taskService';
+import type { Task, Category } from './taskService';
 import './App.scss';
 
 interface AppState {
   tasks: Task[];
   categories: Category[];
-  projects: Project[];
   newTask: string;
   selectedCategory: string;
   loading: boolean;
@@ -21,7 +20,6 @@ class App extends Component<{}, AppState> {
     this.state = {
       tasks: [],
       categories: [],
-      projects: [],
       newTask: "",
       selectedCategory: "Tất cả tasks",
       loading: true,
@@ -34,47 +32,38 @@ class App extends Component<{}, AppState> {
     await this.loadData();
   }
 
-  loadData = async (): Promise<void> => {
+  loadData = async () => {
     this.setState({ loading: true, error: null });
     
     try {
-      const [tasks, categories, projects] = await Promise.all([
+      const [tasks, categories] = await Promise.all([
         taskService.getAllTasks(),
         taskService.getAllCategories(),
-        taskService.getAllProjects()
       ]);
 
-      this.setState({
-        tasks,
-        categories,
-        projects,
-        loading: false
-      });
+      this.setState({ tasks, categories, loading: false });
     } catch (error) {
-      console.error('Error loading data:', error);
       this.setState({
-        error: 'Không thể tải dữ liệu. Vui lòng kiểm tra JSON Server đã chạy chưa.',
+        error: 'Không thể tải dữ liệu',
         loading: false
       });
     }
   };
 
-  toggleTask = async (id: number): Promise<void> => {
+  toggleTask = async (id: number) => {
     try {
       const updatedTask = await taskService.toggleTask(id);
-      
       this.setState(prevState => ({
         tasks: prevState.tasks.map(task => 
           task.id === id ? updatedTask : task
         )
       }));
     } catch (error) {
-      console.error('Error toggling task:', error);
       this.setState({ error: 'Không thể cập nhật task' });
     }
   };
 
-  addTask = async (): Promise<void> => {
+  addTask = async () => {
     const { newTask } = this.state;
     if (!newTask.trim()) return;
 
@@ -88,108 +77,68 @@ class App extends Component<{}, AppState> {
       };
 
       const createdTask = await taskService.createTask(newTaskObj);
-      
       this.setState(prevState => ({
         tasks: [...prevState.tasks, createdTask],
         newTask: ""
       }));
     } catch (error) {
-      console.error('Error adding task:', error);
       this.setState({ error: 'Không thể thêm task mới' });
     }
   };
 
-  deleteTask = async (id: number): Promise<void> => {
+  deleteTask = async (id: number) => {
     if (!window.confirm('Bạn có chắc chắn muốn xóa task này?')) return;
 
     try {
       await taskService.deleteTask(id);
-      
       this.setState(prevState => ({
         tasks: prevState.tasks.filter(task => task.id !== id)
       }));
     } catch (error) {
-      console.error('Error deleting task:', error);
       this.setState({ error: 'Không thể xóa task' });
     }
   };
 
-  updateTask = async (id: number, updates: Partial<Task>): Promise<void> => {
-    try {
-      const updatedTask = await taskService.updateTask(id, updates);
-      
-      this.setState(prevState => ({
-        tasks: prevState.tasks.map(task => 
-          task.id === id ? updatedTask : task
-        )
-      }));
-    } catch (error) {
-      console.error('Error updating task:', error);
-      this.setState({ error: 'Không thể cập nhật task' });
-    }
-  };
+  handleNewTaskChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  this.setState({ newTask: e.target.value });
+};
 
-  handleNewTaskChange = (e: React.ChangeEvent<HTMLInputElement>): void => {
-    this.setState({ newTask: e.target.value });
-  };
+  handleKeyPress = (e: React.KeyboardEvent<HTMLInputElement>) => {
+  if (e.key === 'Enter') {
+    this.addTask();
+  }
+};
 
-  handleKeyPress = (e: React.KeyboardEvent<HTMLInputElement>): void => {
-    if (e.key === 'Enter') {
-      this.addTask();
-    }
-  };
+ handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  this.setState({ searchQuery: e.target.value });
+};
 
-  handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>): void => {
-    this.setState({ searchQuery: e.target.value });
-  };
+  setSelectedCategory = (categoryName: string) => {
+  this.setState({ selectedCategory: categoryName });
+};
 
-  setSelectedCategory = (categoryName: string): void => {
-    this.setState({ selectedCategory: categoryName });
-  };
+ getPriorityColor = (priority: string) => {
+  switch(priority) {
+    case "Cao": return "#ef4444";
+    case "Trung bình": return "#f59e0b";  
+    case "Thấp": return "#22c55e";
+    default: return "#6b7280";
+  }
+};
 
-  getPriorityColor = (priority: string): string => {
-    switch(priority) {
-      case "Cao": return "#ef4444";
-      case "Trung bình": return "#f59e0b";
-      case "Thấp": return "#22c55e";
-      default: return "#6b7280";
-    }
-  };
-
-  focusNewTaskInput = (): void => {
-    const input = document.getElementById('newTaskInput') as HTMLInputElement;
-    if (input) input.focus();
-  };
-
-  getFilteredTasks = (): { activeTasks: Task[], completedTasks: Task[] } => {
+  getFilteredTasks = () => {
     const { tasks, selectedCategory, searchQuery } = this.state;
     
     let filteredTasks = tasks;
 
-    // Lọc theo search query
     if (searchQuery.trim()) {
       filteredTasks = filteredTasks.filter(task =>
-        task.text.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        task.category.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        task.priority.toLowerCase().includes(searchQuery.toLowerCase())
+        task.text.toLowerCase().includes(searchQuery.toLowerCase())
       );
     }
 
-    // Lọc theo category
-    if (selectedCategory !== "Tất cả tasks") {
-      const today = new Date().toISOString().split('T')[0];
-      
-      switch (selectedCategory) {
-        case "Hôm nay":
-          filteredTasks = filteredTasks.filter(task => task.date === today);
-          break;
-        case "Sắp tới":
-          filteredTasks = filteredTasks.filter(task => task.date > today);
-          break;
-        case "Đã hoàn thành":
-          filteredTasks = filteredTasks.filter(task => task.completed);
-          break;
-      }
+    if (selectedCategory === "Đã hoàn thành") {
+      filteredTasks = filteredTasks.filter(task => task.completed);
     }
 
     return {
@@ -198,12 +147,12 @@ class App extends Component<{}, AppState> {
     };
   };
 
-  dismissError = (): void => {
+  dismissError = () => {
     this.setState({ error: null });
   };
 
   render() {
-    const { newTask, selectedCategory, loading, error, searchQuery, categories, projects } = this.state;
+    const { newTask, selectedCategory, loading, error, searchQuery, categories } = this.state;
     const { activeTasks, completedTasks } = this.getFilteredTasks();
 
     if (loading) {
@@ -217,7 +166,6 @@ class App extends Component<{}, AppState> {
 
     return (
       <>
-        {/* Error Toast */}
         {error && (
           <div className="error-toast">
             <span>{error}</span>
@@ -228,28 +176,8 @@ class App extends Component<{}, AppState> {
         )}
         
         <div className="app-container">
-          {/* Sidebar */}
           <div className="sidebar">
-            {/* Sidebar Header */}
             <div className="sidebar-header">
-              <div className="header-controls">
-                <button 
-                  onClick={this.addTask}
-                  className="new-task-btn"
-                  disabled={!newTask.trim()}
-                >
-                  New Task
-                </button>
-                <div className="icon-controls">
-                  <button className="icon-btn">
-                    <Search size={20} />
-                  </button>
-                  <button className="icon-btn">
-                    <Filter size={20} />
-                  </button>
-                </div>
-              </div>
-              
               <div className="search-container">
                 <Search size={16} className="search-icon" />
                 <input
@@ -262,9 +190,7 @@ class App extends Component<{}, AppState> {
               </div>
             </div>
 
-            {/* Sidebar Content */}
             <div className="sidebar-content">
-              {/* Categories */}
               <div className="category-section">
                 <div className="section-title">DANH MỤC</div>
                 <div className="category-list">
@@ -280,67 +206,28 @@ class App extends Component<{}, AppState> {
                   ))}
                 </div>
               </div>
-
-              {/* Projects */}
-              <div className="project-section">
-                <div className="section-title">DỰ ÁN</div>
-                <div className="project-list">
-                  {projects.map((project) => (
-                    <button key={project.id} className="project-item">
-                      <div 
-                        className="project-indicator"
-                        style={{ backgroundColor: project.color }}
-                      />
-                      <span className="project-name">{project.name}</span>
-                    </button>
-                  ))}
-                </div>
-              </div>
             </div>
           </div>
 
-          {/* Main Content */}
           <div className="main-content">
-            {/* Main Header */}
             <div className="main-header">
               <div className="main-header-content">
                 <div className="main-title-section">
                   <h1 className="main-title">{selectedCategory}</h1>
                   <span className="task-count">{activeTasks.length} tasks</span>
-                  <button className="icon-btn">
-                    <MoreHorizontal size={20} />
-                  </button>
-                </div>
-                <div className="main-controls">
-                  <button className="today-btn">
-                    <Calendar size={16} />
-                    <span>Today</span>
-                  </button>
-                  <div className="user-info">
-                    <span className="user-text">Người dùng (3)</span>
-                    <button className="icon-btn">
-                      <User size={20} />
-                    </button>
-                  </div>
                 </div>
               </div>
             </div>
 
-            {/* Main Body */}
             <div className="main-body">
               <div className="main-container">
-                {/* Add New Task */}
                 <div className="content-section">
                   <div className="add-task-section">
-                    <button
-                      onClick={this.focusNewTaskInput}
-                      className="add-task-trigger"
-                    >
+                    <div className="add-task-trigger">
                       <Plus size={20} />
                       <span>Thêm task mới</span>
-                    </button>
+                    </div>
                     <input
-                      id="newTaskInput"
                       type="text"
                       value={newTask}
                       onChange={this.handleNewTaskChange}
@@ -351,7 +238,6 @@ class App extends Component<{}, AppState> {
                   </div>
                 </div>
 
-                {/* Active Tasks */}
                 {activeTasks.map((task) => (
                   <div key={task.id} className="content-section">
                     <div className="task-card">
@@ -388,7 +274,6 @@ class App extends Component<{}, AppState> {
                   </div>
                 ))}
 
-                {/* Completed Tasks */}
                 {completedTasks.length > 0 && (
                   <div className="completed-section">
                     <div className="section-header">
@@ -434,7 +319,6 @@ class App extends Component<{}, AppState> {
                   </div>
                 )}
 
-                {/* Empty State */}
                 {activeTasks.length === 0 && !searchQuery && (
                   <div className="empty-state">
                     <div className="empty-icon">
@@ -442,16 +326,9 @@ class App extends Component<{}, AppState> {
                     </div>
                     <h3 className="empty-title">Không có task nào</h3>
                     <p className="empty-description">Bắt đầu bằng cách thêm task đầu tiên của bạn</p>
-                    <button
-                      onClick={this.focusNewTaskInput}
-                      className="primary-btn"
-                    >
-                      Thêm task đầu tiên
-                    </button>
                   </div>
                 )}
 
-                {/* No Search Results */}
                 {activeTasks.length === 0 && searchQuery && (
                   <div className="empty-state">
                     <div className="empty-icon">
